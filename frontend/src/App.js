@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google"; // ✅ Import GoogleOAuthProvider
 import Home from "./pages/home";
 import Login from "./pages/login";
+import PasswordVault from "./pages/passwordvault";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/passwordvault" element={<PasswordVault/>} />
         </Routes>
       </BrowserRouter>
     </GoogleOAuthProvider>
