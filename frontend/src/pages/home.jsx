@@ -7,18 +7,26 @@ import Footer from "../components/Footer";
 import Navbar from "../components/navbar";
 
 function Home() {
+  const navigate = useNavigate();
+  
+  const handleOpenVault = () => {
+    navigate("/passwordvault"); 
+  };
+  
+  const handleGeneratePassword = () => {
+    navigate("/generatepassword"); 
+  };
+  
   return (
     <div className="min-h-screen bg-white flex flex-col">
-     <Navbar/>
-
+      <Navbar/>
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-8 py-12">
           <h1 className="text-5xl font-medium text-blue-600 mb-12 font-jersey10 tracking-wider text-center">
             Choose Your Security Tool
           </h1>
-
           <div className="grid md:grid-cols-2 gap-12">
-            {/* Password Vault Card */}
+            
             <div className="bg-white rounded-lg shadow-lg p-8 border border-blue-100">
               <div className="flex items-center justify-center mb-6">
                 <Lock className="w-16 h-16 text-blue-600" />
@@ -30,14 +38,16 @@ function Home() {
                 Securely store and manage all your passwords in one place. Organize them by categories and access them anywhere.
               </p>
               <div className="flex justify-center">
-                <button className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-jersey15 tracking-wider">
+                <button 
+                  className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-jersey15 tracking-wider"
+                  onClick={handleOpenVault}
+                >
                   Open Vault
                   <ChevronRight className="ml-2" />
                 </button>
               </div>
             </div>
-
-            {/* Password Generator Card */}
+            
             <div className="bg-white rounded-lg shadow-lg p-8 border border-blue-100">
               <div className="flex items-center justify-center mb-6">
                 <Key className="w-16 h-16 text-blue-600" />
@@ -49,7 +59,10 @@ function Home() {
                 Create strong, unique passwords instantly. Customize length and complexity to meet your security needs.
               </p>
               <div className="flex justify-center">
-                <button className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-jersey15 tracking-wider">
+                <button 
+                  className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-jersey15 tracking-wider"
+                  onClick={handleGeneratePassword}
+                >
                   Generate Password
                   <ChevronRight className="ml-2" />
                 </button>
@@ -58,7 +71,7 @@ function Home() {
           </div>
         </div>
       </main>
-<Footer/>
+      <Footer/>
     </div>
   );
 }
