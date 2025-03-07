@@ -5,25 +5,31 @@ import loginImage from "../assests/images/login.png";
 import '../styles/fonts.css'
 import Navbar from "../components/navbar";
 import Footer from "../components/Footer";
+import { useAuth } from "../context/AuthContext";
 
 
 const Login = () => {
   const navigate = useNavigate();
+  const { setUserToken } = useAuth();
 
-  const handleSuccess =async (credentialResponse) => {
-    const token  = credentialResponse.credential;
-    const res = await fetch('http://localhost:5001/auth/google',{
+  const handleSuccess = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+    const res = await fetch('http://localhost:5001/auth/google', {
       method: "POST",
       headers: {
-        "Content-Type" : "application/json"
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({token})
-      
-    })
+      body: JSON.stringify({ token })
+    });
 
-    const data = await res.json()
+    const data = await res.json();
     console.log("sent token");
-    console.log(data)
+    console.log(data);
+
+    // Set the token in context
+    setUserToken(data.token);
+
+    // Navigate to home
     navigate("/");
   };
 

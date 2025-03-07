@@ -5,9 +5,11 @@ import { Lock, Key, ChevronRight } from 'lucide-react';
 import SocialIcons from "./SocialIcons";
 import Footer from "../components/Footer";
 import Navbar from "../components/navbar";
+import { useAuth } from '../context/AuthContext'; // Import the AuthContext
 
 function Home() {
   const navigate = useNavigate();
+  const { userToken } = useAuth(); // Access the userToken from context
   
   const handleOpenVault = () => {
     navigate("/passwordvault"); 

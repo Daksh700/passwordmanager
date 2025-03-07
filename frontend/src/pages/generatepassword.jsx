@@ -1,9 +1,15 @@
 import React, { useState } from "react";
+import { useAuth } from '../context/AuthContext'; // Import the AuthContext
 import { Copy, RefreshCw, Lock } from 'lucide-react';
 import Navbar from "../components/navbar";
 import Footer from "../components/Footer";
+import ServiceNameModal from "../components/serviceNameModal";
+
 
 function PasswordGenerate() {
+  const { userToken } = useAuth(); 
+  console.log("User Token:", userToken); 
+
   const [passwordLength, setPasswordLength] = useState(16);
   const [includeUppercase, setIncludeUppercase] = useState(true);
   const [includeLowercase, setIncludeLowercase] = useState(true);
@@ -11,6 +17,7 @@ function PasswordGenerate() {
   const [includeNumbers, setIncludeNumbers] = useState(true);
   const [generatedPassword, setGeneratedPassword] = useState("eYd4w!$Z1rPbl6N8jO7o");
   const [copyMessage, setCopyMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleGeneratePassword = () => {
     const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -45,6 +52,28 @@ function PasswordGenerate() {
       .catch(err => {
         console.error('Failed to copy: ', err);
       });
+  };
+
+  const handleSavePassword = (serviceName) => {
+    fetch('http://localhost:5001/api/passwords', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        serviceName: serviceName,
+        password: generatedPassword,
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Password saved:', data);
+
+    })
+    .catch(error => {
+      console.error('Error saving password:', error);
+    });
   };
 
   return (
@@ -147,6 +176,12 @@ function PasswordGenerate() {
                 >
                   Copy
                 </button>
+                <button 
+                  className="ml-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-6 py-4 rounded-md"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Save
+                </button>
               </div>
               {copyMessage && (
                 <p className="text-green-600 mt-2">{copyMessage}</p>
@@ -171,6 +206,11 @@ function PasswordGenerate() {
         </div>
       </main>
 
+      <ServiceNameModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSavePassword} 
+      />
       <Footer />
     </div>
   );
