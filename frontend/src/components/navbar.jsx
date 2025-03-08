@@ -1,11 +1,12 @@
 import React from "react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from 'axios';
 
 const Navbar = () => {
     const [userInfo,setUserInfo] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     
 
@@ -30,11 +31,11 @@ const Navbar = () => {
             <a href="#" className="text-blue-600 hover:text-blue-700 text-3xl font-jersey15">
               FAQs
             </a>
-            <a onClick={handleLogout} className="text-blue-600 hover:text-blue-700 text-3xl font-jersey15">
-              Logout
-            </a>
-
-
+            {location.pathname !== '/login' && (
+                <a onClick={handleLogout} className="text-blue-600 hover:text-blue-700 text-3xl font-jersey15">
+                    Logout
+                </a>
+            )}
           </div>
         </div>
       </nav>
