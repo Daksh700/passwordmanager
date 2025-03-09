@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Lock, AlertCircle, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { PlusCircle, Lock, AlertCircle, Eye, EyeOff, Copy, Check, Edit, Trash2 } from 'lucide-react';
 import Navbar from "../components/navbar";
 import Footer from "../components/Footer";
 import PasswordFormModal from "../pages/passwordFormModal";
@@ -16,6 +16,7 @@ function PasswordVault() {
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [passwordToEdit, setPasswordToEdit] = useState(null);
   
   useEffect(() => {
     if (userToken) {
@@ -25,9 +26,13 @@ function PasswordVault() {
     }
   }, [userToken, navigate]);
 
+  // Modify this useEffect to prevent infinite loading when there are no passwords
   useEffect(() => {
     if (passwordServices.length > 0) {
       fetchPasswordDetails();
+    } else {
+      // If there are no passwords, set loading to false
+      setLoading(false);
     }
   }, [passwordServices]);
 
@@ -49,6 +54,7 @@ function PasswordVault() {
       .then((data) => {
         console.log("Password list fetched:", data);
         setPasswordServices(data);
+        // If the data array is empty, this will trigger the useEffect which sets loading to false
       })
       .catch((error) => {
         console.error("Error fetching password list:", error);
@@ -88,7 +94,40 @@ function PasswordVault() {
   };
   
   const handleAddPassword = () => {
+    setPasswordToEdit(null);
     setIsModalOpen(true);
+  };
+  
+  const handleUpdatePassword = (serviceId) => {
+    const passwordToUpdate = passwordData[serviceId];
+    setPasswordToEdit(passwordToUpdate);
+    setIsModalOpen(true);
+  };
+
+  const handleDeletePassword = (serviceId) => {
+    if (window.confirm("Are you sure you want to delete this password?")) {
+      // Using the specific delete route provided in your API
+      fetch(`http://localhost:5001/api/passwords/delete/${serviceId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to delete password: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(() => {
+          // Refresh the password list
+          fetchPasswordList();
+        })
+        .catch((error) => {
+          console.error("Error deleting password:", error);
+          setError(error.message);
+        });
+    }
   };
   
   const handleModalClose = (passwordAdded = false) => {
@@ -221,12 +260,29 @@ function PasswordVault() {
                                   {visiblePasswords[pwd.serviceId] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                                 <button 
-                                  onClick={() => copyPassword(pwd.serviceId)} // Pass the service ID to copyPassword
+                                  onClick={() => copyPassword(pwd.serviceId)}
                                   className="ml-1 text-gray-500 hover:text-blue-600"
                                   title="Copy password"
                                 >
                                   {copiedId === pwd.serviceId ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                 </button>
+                                
+                                <div className="ml-2 border-l border-gray-300 pl-2 flex">
+                                  <button 
+                                    onClick={() => handleUpdatePassword(pwd.serviceId)} 
+                                    className="text-gray-500 hover:text-blue-600 mr-1"
+                                    title="Update password"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeletePassword(pwd.serviceId)} 
+                                    className="text-gray-500 hover:text-red-600"
+                                    title="Delete password"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -259,7 +315,8 @@ function PasswordVault() {
       {/* Password Form Modal */}
       <PasswordFormModal 
         isOpen={isModalOpen} 
-        onClose={handleModalClose} 
+        onClose={handleModalClose}
+        passwordToEdit={passwordToEdit} 
       />
 
       <Footer />

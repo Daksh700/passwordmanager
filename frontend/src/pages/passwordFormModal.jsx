@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Eye,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-function PasswordFormModal({ isOpen, onClose }) {
+function PasswordFormModal({ isOpen, onClose, passwordToEdit }) {
   const { userToken } = useAuth();
   
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -21,6 +21,22 @@ function PasswordFormModal({ isOpen, onClose }) {
     password: "",
   });
   const [saveStatus, setSaveStatus] = useState({ message: "", isError: false });
+  const isEditMode = !!passwordToEdit;
+
+  // Update form when passwordToEdit changes
+  useEffect(() => {
+    if (passwordToEdit) {
+      setFormData({
+        title: passwordToEdit.serviceName || "",
+        password: passwordToEdit.decryptedPassword || "",
+      });
+      if (passwordToEdit.decryptedPassword) {
+        setPasswordStrength(calculatePasswordStrength(passwordToEdit.decryptedPassword));
+      }
+    } else {
+      resetForm();
+    }
+  }, [passwordToEdit]);
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -102,38 +118,49 @@ function PasswordFormModal({ isOpen, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("http://localhost:5001/api/passwords", {
-      method: "POST",
+    // Prepare the request data
+    const requestData = {
+      serviceName: formData.title,
+      password: formData.password,
+    };
+
+    // URL and method differ based on whether we're editing or creating
+    const url = isEditMode 
+      ? `http://localhost:5001/api/passwords/update/${passwordToEdit.serviceId}`
+      : "http://localhost:5001/api/passwords";
+    
+    const method = isEditMode ? "PUT" : "POST";
+
+    fetch(url, {
+      method: method,
       headers: {
         Authorization: `Bearer ${userToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        serviceName: formData.title,
-        password: formData.password,
-      }),
+      body: JSON.stringify(requestData),
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to save password");
+          throw new Error(`Failed to ${isEditMode ? 'update' : 'save'} password`);
         }
         return response.json();
       })
       .then((data) => {
         setSaveStatus({
-          message: "Password saved successfully!",
+          message: `Password ${isEditMode ? 'updated' : 'saved'} successfully!`,
           isError: false,
         });
 
         setTimeout(() => {
-          onClose(true); // Pass true to indicate a password was added
+          // Pass appropriate values back to parent component
+          onClose(true, isEditMode, isEditMode ? { ...data, serviceId: passwordToEdit.serviceId } : null);
           resetForm();
         }, 1500);
       })
       .catch((error) => {
-        console.error("Error saving password:", error);
+        console.error(`Error ${isEditMode ? 'updating' : 'saving'} password:`, error);
         setSaveStatus({
-          message: "Error saving password. Please try again.",
+          message: `Error ${isEditMode ? 'updating' : 'saving'} password. Please try again.`,
           isError: true,
         });
       });
@@ -151,7 +178,7 @@ function PasswordFormModal({ isOpen, onClose }) {
       <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-jersey10 text-blue-600">
-            Add New Password
+            {isEditMode ? 'Update Password' : 'Add New Password'}
           </h2>
           <button
             onClick={handleClose}
@@ -312,7 +339,7 @@ function PasswordFormModal({ isOpen, onClose }) {
               type="submit"
               className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md font-jersey15"
             >
-              Save Password
+              {isEditMode ? 'Update' : 'Save'} Password
             </button>
           </div>
         </form>
