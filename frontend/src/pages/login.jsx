@@ -26,10 +26,10 @@ const Login = () => {
     console.log("sent token");
     console.log(data);
 
-    // Set the token in context
+ 
     setUserToken(data.token);
 
-    // Navigate to home
+
     navigate("/");
   };
 

@@ -17,7 +17,6 @@ function PasswordVault() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // First fetch all password services
   useEffect(() => {
     if (userToken) {
       fetchPasswordList();
@@ -26,16 +25,8 @@ function PasswordVault() {
     }
   }, [userToken, navigate]);
 
-  // Then fetch individual password details
   useEffect(() => {
     if (passwordServices.length > 0) {
-      fetchPasswordDetails();
-    }
-  }, [passwordServices]);
-
-  useEffect(() => {
-    if (passwordServices.length > 0) {
-      console.log("Fetching details for service IDs:", passwordServices.map(pwd => pwd._id));
       fetchPasswordDetails();
     }
   }, [passwordServices]);
@@ -68,30 +59,25 @@ function PasswordVault() {
 
   const fetchPasswordDetails = async () => {
     const passwordDetailsMap = {};
-    const fetchPromises = passwordServices.map(pwd => 
-      fetch(`http://localhost:5001/api/passwords/${pwd._id}`, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      })
-      .then(response => {
+    setLoading(true);
+    
+    try {
+      for (const pwd of passwordServices) {
+        const response = await fetch(`http://localhost:5001/api/passwords/${pwd.serviceId}`, {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
         if (!response.ok) {
           throw new Error(`Failed to fetch password details: ${response.status}`);
         }
-        return response.json();
-      })
-      .then(detailData => {
-        passwordDetailsMap[pwd._id] = detailData;
-        return detailData;
-      })
-      .catch(error => {
-        console.error(`Error fetching details for ${pwd.serviceName}:`, error);
-        return null;
-      })
-    );
 
-    try {
-      await Promise.all(fetchPromises);
+        const detailData = await response.json();
+        passwordDetailsMap[pwd.serviceId] = detailData;
+        console.log(detailData); // Log the detailData for debugging
+      }
+      
       setPasswordData(passwordDetailsMap);
       setLoading(false);
     } catch (error) {
@@ -119,12 +105,42 @@ function PasswordVault() {
     }));
   };
 
-  const copyPassword = (id, password) => {
-    navigator.clipboard.writeText(password);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
   
+  const copyPassword = (serviceId) => {
+    const correctServiceId = Object.keys(passwordData)[0]; // Get actual key
+  
+    console.log("Correct Service ID:", correctServiceId);
+    console.log("Passed Service ID:", serviceId);
+  
+    if (serviceId !== correctServiceId) {
+      console.error("Mismatched service ID!");
+      return;
+    }
+  
+    const passwordDetail = passwordData[correctServiceId];
+  
+    if (!passwordDetail) {
+      console.error("No password found for ID:", correctServiceId);
+      return;
+    }
+  
+    const passwordToCopy = passwordDetail.decryptedPassword;
+    if (!passwordToCopy) {
+      console.error("Decrypted password is missing!");
+      return;
+    }
+  
+    navigator.clipboard.writeText(passwordToCopy)
+      .then(() => {
+        console.log(`Copied password: ${passwordToCopy}`);
+        setCopiedId(correctServiceId);
+        setTimeout(() => setCopiedId(null), 2000);
+      })
+      .catch(err => {
+        console.error("Failed to copy password:", err);
+      });
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
@@ -178,9 +194,9 @@ function PasswordVault() {
               <h2 className="text-2xl font-medium text-blue-600 mb-4 font-jersey10">Your Passwords</h2>
               <div className="space-y-4">
                 {passwordServices.map((pwd) => {
-                  const details = passwordData[pwd._id] || {};
+                  const details = passwordData[pwd.serviceId] || {};
                   return (
-                    <div key={pwd._id} className="border border-gray-200 rounded-md p-4 hover:border-blue-300 transition-all">
+                    <div key={pwd.serviceId} className="border border-gray-200 rounded-md p-4 hover:border-blue-300 transition-all">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-blue-100 rounded-md flex items-center justify-center mr-4">
@@ -192,24 +208,24 @@ function PasswordVault() {
                             {details.email && <p className="text-sm text-gray-500">{details.email}</p>}
                             <div className="flex items-center mt-1">
                               <div className="bg-gray-100 px-3 py-1 rounded text-sm flex items-center min-w-40">
-                                {visiblePasswords[pwd._id] ? (
-                                  <span>{details.password || "••••••••••••"}</span>
+                                {visiblePasswords[pwd.serviceId] ? (
+                                  <span>{details.decryptedPassword || "••••••••••••"}</span>
                                 ) : (
                                   <span>••••••••••••</span>
                                 )}
                                 <button 
-                                  onClick={() => togglePasswordVisibility(pwd._id)} 
+                                  onClick={() => togglePasswordVisibility(pwd.serviceId)} 
                                   className="ml-2 text-gray-500 hover:text-blue-600"
-                                  title={visiblePasswords[pwd._id] ? "Hide password" : "Show password"}
+                                  title={visiblePasswords[pwd.serviceId] ? "Hide password" : "Show password"}
                                 >
-                                  {visiblePasswords[pwd._id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  {visiblePasswords[pwd.serviceId] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                                 <button 
-                                  onClick={() => copyPassword(pwd._id, details.password || "")} 
+                                  onClick={() => copyPassword(pwd.serviceId)} // Pass the service ID to copyPassword
                                   className="ml-1 text-gray-500 hover:text-blue-600"
                                   title="Copy password"
                                 >
-                                  {copiedId === pwd._id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                  {copiedId === pwd.serviceId ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                 </button>
                               </div>
                             </div>

@@ -5,20 +5,21 @@ import { Lock, Key, ChevronRight } from 'lucide-react';
 import SocialIcons from "./SocialIcons";
 import Footer from "../components/Footer";
 import Navbar from "../components/navbar";
-import { useAuth } from '../context/AuthContext'; // Import the AuthContext
+import { useAuth } from '../context/AuthContext'; 
 
 function Home() {
   const navigate = useNavigate();
-  const { userToken } = useAuth(); // Access the userToken from context
-  
+  const { userToken, setUserToken } = useAuth();
+  console.log("User Token in Home:", userToken);
+
   const handleOpenVault = () => {
     navigate("/passwordvault"); 
   };
-  
+
   const handleGeneratePassword = () => {
     navigate("/generatepassword"); 
   };
-  
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar/>
