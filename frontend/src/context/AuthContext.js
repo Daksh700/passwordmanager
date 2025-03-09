@@ -8,12 +8,12 @@ export const AuthProvider = ({ children }) => {
 
     const login = (token) => {
         setUserToken(token);
-        localStorage.setItem('userToken', token); // Store token in local storage
+        localStorage.setItem('userToken', token); 
     };
 
     const logout = () => {
         setUserToken(null);
-        localStorage.removeItem('userToken'); // Remove token from local storage
+        localStorage.removeItem('userToken'); 
     };
 
     return (
