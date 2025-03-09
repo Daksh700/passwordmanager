@@ -1,9 +1,14 @@
 import React from 'react';
 import Navbar from '../components/navbar';
+import { useNavigate } from "react-router-dom";
 import Footer from '../components/Footer';
 import { Shield, Lock, Database } from 'lucide-react';
 
 export default function AboutPage() {
+  const navigate = useNavigate();
+  const handleNavigateVault = () => {
+    navigate('/passwordvault')
+  }
   return (
     <div className="min-h-screen bg-white">
       {/* Import Navbar component */}
@@ -71,7 +76,7 @@ export default function AboutPage() {
           <p className="text-gray-600 mb-6 max-w-3xl mx-auto">
             Join thousands of users who trust PASSKEY to protect their passwords and sensitive information. Get started today and take control of your online security.
           </p>
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={handleNavigateVault} className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors">
             Create Your Vault
           </button>
         </div>
